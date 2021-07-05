@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>PirulitoDeUva - Patchs</title>
+		<script type="text/javascript" src="https://stuk.github.io/jszip/dist/jszip.js"></script>
+		<script>
+			const patchs = [{
+				name: 'AIKALauncher',
+				description: 'Multiclient - Remove limit check',
+				patchs: [{
+					search: '(410049004B004100)42(0052)',
+					apply: '$133$2'
+				}, {
+					search: '(410069006B00610043006C006900)65(006E0074)',
+					apply: '$133$2'
+				}]
+			}];
+
+			function patch(file) {
+				const reader = new FileReader();
+				reader.onloadend = function(e) {
+					var o = BufferToHexStr(reader.result), d = o;
+					patchs.forEach(function(p) {
+						if (file.name.match(new RegExp(p.name, 'i')))
+							p.patchs.forEach(function(b) { d = d.replace(new RegExp(b.search, 'gi'), b.apply); });
+					});
+					if (o !== d) download_zip(HexStrToBuffer(d), file.name);
+					else alert("Invalid or already patched file:\n" + file.name);
+				};
+				reader.readAsArrayBuffer(file);
+			}
+
+			function download_zip(data, name) {
+				const zip = new JSZip();
+				zip.file(name + '.bin', data);
+				zip.generateAsync({type: 'blob'}).then(function(blob) {
+					const a = document.createElement('a');
+					document.body.appendChild(a);
+					a.style.display = 'none';
+					a.href = URL.createObjectURL(blob);
+					a.download = name + '.zip';
+					a.click();
+				});
+			}
+
+			function BufferToHexStr(bff) {
+				return Array.from(new Uint8Array(bff)).map(function(x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+			}
+
+			function HexStrToBuffer(str) {
+				return new Uint8Array(str.match(/[\da-f]{2}/gi).map(function(x) { return parseInt(x, 16); })).buffer;
+			}
+		</script>
+		<style>
+			html, body {
+				margin: 0;
+				height: 100%;
+			}
+
+			body {
+				display: flex;
+				align-items: center;
+				background: silver;
+			}
+
+			.main {
+				margin: auto;
+				padding: 25px 50px;
+				border-radius: 5px;
+			}
+
+			.btn {
+				padding: 10px 25px;
+				color: #fff;
+				font-family: 'Arial', Sans-Serif;
+				font-size: 15px;
+				font-weight: 800;
+				text-shadow: 0px -1px 5px rgba(0, 0, 0, 0.5);
+				text-decoration: none;
+				outline: none;
+				border: 1px solid #7c7c7c;
+				border-radius: 5px;
+				background: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.25)), to(#e6e6e6));
+				box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 1), 0px 1px 3px rgba(0, 0, 0, 0.3);
+				cursor: pointer;
+			}
+
+			.btn:active {
+				background: -webkit-gradient(linear, left bottom, left top, from(rgba(0, 0, 0, 0.25)), to(#e6e6e6));
+				box-shadow: inset 0px 1px 0px rgba(0, 0, 0, 0.3), 0px 1px 3px rgba(255, 255, 255, 1);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="main">
+			<label for="file" class="btn">Patch File</label>
+			<input type="file" id="file" onchange="patch(this.files[0])" style="display: none">
+		</div>
+	</body>
+</html>
